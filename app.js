@@ -1,42 +1,84 @@
-document
-  .getElementById("loan-form")
-  .addEventListener("submit", calculateResult);
+//Book constructor
+function Book(title, author, isbn) {
+  this.title = title;
+  this.author = author;
+  this.isbn = isbn;
+}
 
-function calculateResult(e) {
-  const amount = document.getElementById("amount");
-  const interest = document.getElementById("interest");
-  const years = document.getElementById("years");
-  const monthlyPayment = document.getElementById("monthly-payment");
-  const totalPayment = document.getElementById("total-payment");
-  const totalInterest = document.getElementById("total-intrest");
+//UI constructor
+function UI() {}
 
-  const principal = parseFloat(amount.value);
-  const calculatedinterest = parseFloat(interest.value) / 100 / 12;
-  const calculatedPayments = parseFloat(years.value) * 12;
+//Add Book to list
+UI.prototype.addBookToList = function (book) {
+  const list = document.getElementById("book-list");
 
-  const x = Math.pow(1 + calculatedinterest, calculatedPayments);
-  const monthly = (principal * x * calculatedinterest) / (x - 1);
+  //create tr element
+  const row = document.createElement("tr");
 
-  if (isFinite(monthly)) {
-    monthlyPayment.value = monthly.toFixed(2);
-    totalPayment.value = (monthly * calculatedPayments).toFixed(2);
-    totalInterest.value = (monthly * calculatedPayments - principal).toFixed(2);
-  } else {
-    showError("Please Check Your Number");
+  //insert cols
+  row.innerHTML = `
+ <td>${book.title}</td>
+ <td>${book.author}</td>
+ <td>${book.isbn}</td>
+ <td><a href="#" class="delete">X</a></td>
+ `;
+  list.appendChild(row);
+};
+
+//Show alert
+UI.prototype.showAlert = function (message, className) {
+  const div = document.createElement("div");
+  div.className = `alert ${className}`;
+  div.appendChild(document.createTextNode(message));
+  const container = document.querySelector(".container");
+  const form = document.querySelector("#book-form");
+  container.insertBefore(div, form);
+  setTimeout(function () {
+    document.querySelector(".alert").remove();
+  }, 3000);
+};
+
+//Delete Book
+UI.prototype.deleteBook = function (target) {
+  if (target.className === "delete") {
+    target.parentElement.parentElement.remove();
   }
+};
+
+//clear fields
+UI.prototype.clearFields = function () {
+  document.getElementById("title").value = "";
+  document.getElementById("author").value = "";
+  document.getElementById("isbn").value = "";
+};
+//Event Listeners
+document.getElementById("book-form").addEventListener("submit", function (e) {
+  // get form values
+  const title = document.getElementById("title").value;
+  const author = document.getElementById("author").value;
+  const isbn = document.getElementById("isbn").value;
+  // instantiate book
+  const book = new Book(title, author, isbn);
+  // instantiate UI
+  const ui = new UI();
+
+  //validate UI
+  if (title === "" || (author === "") | (isbn === "")) {
+    ui.showAlert("Please fill in all fields", "error");
+  } else {
+    //Add book to list
+    ui.addBookToList(book);
+
+    ui.showAlert("Book Added!", "success");
+    //clear fields
+    ui.clearFields();
+  }
+
   e.preventDefault();
-}
+});
 
-function showError(error) {
-  const errorDiv = document.createElement("div");
-  const card = document.querySelector(".card");
-  const heading = document.querySelector(".heading");
-  errorDiv.className = "alert alert-danger";
-  errorDiv.appendChild(document.createTextNode(error));
-  card.insertBefore(errorDiv, heading);
-  setTimeout(clearError, 3000);
-}
-
-function clearError() {
-  document.querySelector(".alert").remove();
-}
+document.getElementById("book-list").addEventListener("click", function (e) {
+  const ui = new UI();
+  ui.deleteBook(e.target);
+  ui.showAlert("Book Removed!", "success");
+});
